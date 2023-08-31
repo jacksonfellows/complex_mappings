@@ -6,6 +6,13 @@ const Im = z => z[1];
 // Operations on complex numbers.
 const add = (z1, z2) => Z(Re(z1) + Re(z2), Im(z1) + Im(z2));
 const mul = (z1, z2) => Z(Re(z1)*Re(z2) - Im(z1)*Im(z2), Re(z1)*Im(z2) + Im(z1)*Re(z2));
+const conj = z => Z(Re(z), -Im(z));
+const div = (z1, z2) => {
+	let c = conj(z2);
+	let num = mul(z1, c);
+	let den = Re(mul(z2, c));
+	return Z(Re(num) / den, Im(num) / den);
+};
 
 var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
@@ -171,6 +178,15 @@ function parse_expr(str) {
 				led: left => {
 					let right = parse_expr_1(20);
 					return z => mul(left(z), right(z));
+				},
+			};
+		} else if (str[i] == "/") {
+			i++;
+			return {
+				lbp: 20,
+				led: left => {
+					let right = parse_expr_1(20);
+					return z => div(left(z), right(z));
 				},
 			};
 		} else if (str[i] == "(") {
