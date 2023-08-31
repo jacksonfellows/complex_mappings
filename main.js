@@ -7,14 +7,18 @@ const Im = z => z[1];
 const add = (z1, z2) => Z(Re(z1) + Re(z2), Im(z1) + Im(z2));
 const mul = (z1, z2) => Z(Re(z1)*Re(z2) - Im(z1)*Im(z2), Re(z1)*Im(z2) + Im(z1)*Re(z2));
 
-const Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
-const W_PLANE_CTX = document.getElementById("w_plane").getContext("2d");
+var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
-const PLANE_SIZE = 3;
-
-var CANVAS_SIZE = document.getElementById("z_plane").width;
+var CURRENT_TRANSFORM = z => z;
 
 window.onload = () => {
+	Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
+	W_PLANE_CTX = document.getElementById("w_plane").getContext("2d");
+
+	PLANE_SIZE = 3;
+
+	CANVAS_SIZE = document.getElementById("z_plane").width;
+
 	// Initialize canvas.
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
 		ctx.scale(CANVAS_SIZE/PLANE_SIZE, -CANVAS_SIZE/PLANE_SIZE);
@@ -24,6 +28,19 @@ window.onload = () => {
 
 	draw_grid();
 	draw_axes();
+
+	var F_INPUT = document.getElementById("f_input");
+	F_INPUT.oninput = () => {
+		try {
+			CURRENT_TRANSFORM = parse_expr(F_INPUT.value);
+			console.log("parsed expression!");
+			clear_planes();
+			draw_grid();
+			draw_axes();
+		} catch (e) {
+			console.log(`caught ${e} in parsing`);
+		}
+	};
 };
 
 function draw_line(ctx, points) {
@@ -47,8 +64,6 @@ function interpolate_line(z1, z2, steps) {
 	}
 	return line;
 }
-
-var CURRENT_TRANSFORM = z => z;
 
 var STEPS = 500;
 
@@ -94,4 +109,40 @@ function draw_axes() {
 		ctx.fillText("y", CANVAS_SIZE/2 + 20, 20);
 		ctx.restore();
 	});
+}
+
+function parse_expr(str) {
+	let i = 0;
+	function next_token() {
+		if (i >= str.length) {
+			i++
+			return {			// end token
+				lpb: 0
+			};
+		} else if (str[i] == "z") {
+			i++;
+			return {
+				nud: () => (z => z),
+			};
+		}
+	}
+
+	let token = next_token();
+	function parse_expr_1(rbp) {
+		let prev_token = token;
+		token = next_token();
+		let left = prev_token.nud();
+		while (rbp < token.lbp) {
+			prev_token = token;
+			token = next_token();
+			left = prev_token.led(left);
+		}
+		return left;
+	}
+
+	let expr = parse_expr_1(0);
+	if (i <= str.length) {
+		throw "could not parse all of input";
+	}
+	return expr;
 }
