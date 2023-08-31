@@ -11,21 +11,31 @@ var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
 var CURRENT_TRANSFORM = z => z;
 
+var CANVAS_SIZE;
+function init_canvas() {
+	CANVAS_SIZE = window.innerWidth / 2 - 20;
+	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
+		ctx.canvas.width = CANVAS_SIZE;
+		ctx.canvas.height = CANVAS_SIZE;
+		ctx.scale(CANVAS_SIZE/PLANE_SIZE, -CANVAS_SIZE/PLANE_SIZE);
+		ctx.translate(PLANE_SIZE/2, -PLANE_SIZE/2);
+		ctx.lineWidth = 2*PLANE_SIZE/CANVAS_SIZE;
+	});
+}
+
+window.onresize = () => {
+	init_canvas();
+	draw_grid();
+	draw_axes();
+}
+
 window.onload = () => {
 	Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
 	W_PLANE_CTX = document.getElementById("w_plane").getContext("2d");
 
 	PLANE_SIZE = 3;
 
-	CANVAS_SIZE = document.getElementById("z_plane").width;
-
-	// Initialize canvas.
-	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
-		ctx.scale(CANVAS_SIZE/PLANE_SIZE, -CANVAS_SIZE/PLANE_SIZE);
-		ctx.translate(PLANE_SIZE/2, -PLANE_SIZE/2);
-		ctx.lineWidth = 2*PLANE_SIZE/CANVAS_SIZE;
-	});
-
+	init_canvas();
 	draw_grid();
 	draw_axes();
 
