@@ -38,7 +38,7 @@ window.onload = () => {
 			draw_grid();
 			draw_axes();
 		} catch (e) {
-			console.log(`caught ${e} in parsing`);
+			console.log(`caught '${e}' in parsing`);
 		}
 	};
 };
@@ -111,23 +111,89 @@ function draw_axes() {
 	});
 }
 
+function isdigit(c) {
+	return "0" <= c && c <= "9";
+}
+
 function parse_expr(str) {
 	let i = 0;
 	function next_token() {
+		if (str[i] == " ") {
+			while (str[i] == " ") {i++;}
+		}
+
 		if (i >= str.length) {
 			i++
 			return {			// end token
-				lpb: 0
+				lpb: 0,
 			};
 		} else if (str[i] == "z") {
 			i++;
 			return {
 				nud: () => (z => z),
 			};
+		} else if (str[i] == "+") {
+			i++;
+			return {
+				lbp: 10,
+				led: left => {
+					let right = parse_expr_1(10);
+					return z => add(left(z), right(z));
+				},
+			};
+		} else if (str[i] == "-") {
+			i++;
+			return {
+				lbp: 10,
+				nud: () => {
+					let expr = parse_expr_1(30);
+					return z => mul(Z(-1, 0), expr(z));
+				},
+				led: left => {
+					let right = parse_expr_1(10);
+					return z => add(left(z), mul(Z(-1,0), right(z)));
+				},
+			};
+		} else if (str[i] == "*") {
+			i++;
+			return {
+				lbp: 20,
+				led: left => {
+					let right = parse_expr_1(20);
+					return z => mul(left(z), right(z));
+				},
+			};
+		} else if (str[i] == "(") {
+			i++;
+			return {
+				lbp: 0,
+				nud: () => {
+					let expr = parse_expr_1(0);
+					if (token != ")") {
+						throw "expected closing )";
+					}
+					token = next_token();
+					return expr;
+				},
+			};
+		} else if (str[i] == ")") {
+			i++;
+			return ")";
+		} else if (isdigit(str[i])) {
+			let n = 0;
+			while (isdigit(str[i])) {
+				n = n * 10 + parseInt(str[i]);
+				i++;
+			}
+			return {
+				nud: () => (z => Z(n, 0)),
+			};
 		}
+		throw "failed to consume token";
 	}
 
 	let token = next_token();
+
 	function parse_expr_1(rbp) {
 		let prev_token = token;
 		token = next_token();
