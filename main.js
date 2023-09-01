@@ -5,6 +5,7 @@ const Im = z => z[1];
 
 // Operations on complex numbers.
 const add = (z1, z2) => Z(Re(z1) + Re(z2), Im(z1) + Im(z2));
+const sub = (z1, z2) => Z(Re(z1) - Re(z2), Im(z1) - Im(z2));
 const mul = (z1, z2) => Z(Re(z1)*Re(z2) - Im(z1)*Im(z2), Re(z1)*Im(z2) + Im(z1)*Re(z2));
 const conj = z => Z(Re(z), -Im(z));
 const div = (z1, z2) => {
@@ -179,7 +180,7 @@ function parse_expr(str) {
 				},
 				led: left => {
 					let right = parse_expr_1(10);
-					return z => add(left(z), mul(Z(-1,0), right(z)));
+					return z => sub(left(z), right(z));
 				},
 			};
 		} else if (str[i] == "*") {
@@ -290,7 +291,6 @@ function parse_expr(str) {
 }
 
 function grid_radio_change() {
-	console.log("grid_radio_change");
 	GRAPH_TYPE = document.querySelector('input[name="graph-type"]:checked').value;
 	clear_planes();
 	update_graph();
