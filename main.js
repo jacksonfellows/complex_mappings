@@ -99,15 +99,16 @@ function set_stroke(c) {
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => ctx.strokeStyle = c);
 }
 
+var N_LINES = 10;
+
 function draw_grid() {
-	let n_square_per_quadrant = 10;
-	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_square_per_quadrant) {
+	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/N_LINES) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// vertical line
 		set_stroke(`hsl(${300 + 180*p} 100% 50%)`);
 		draw_line_transform([x, -PLANE_SIZE], [x, +PLANE_SIZE]);
 	}
-	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_square_per_quadrant) {
+	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/N_LINES) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// horizontal line
 		set_stroke(`hsl(${120 + 180*p} 100% 50%)`);
@@ -276,11 +277,45 @@ function parse_expr(str) {
 	return expr;
 }
 
+function grid_radio_change() {
+	console.log("grid_radio_change");
+	GRAPH_TYPE = document.querySelector('input[name="graph-type"]:checked').value;
+	clear_planes();
+	update_graph();
+}
+
 function update_graph() {
 	switch (GRAPH_TYPE) {
 	case "grid":
 		draw_grid();
 		break;
+	case "circles":
+		draw_circles();
+		break;
 	}
 	draw_axes();
+}
+
+function interpolate_circle(r) {
+	let points = [];
+	for (let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/STEPS) {
+		points.push([r*Math.sin(theta), r*Math.cos(theta)]);
+	}
+	return points;
+}
+
+function draw_circle_transform(r) {
+	Z_PLANE_CTX.beginPath();
+	Z_PLANE_CTX.arc(0, 0, r, 0, 2*Math.PI);
+	Z_PLANE_CTX.stroke();
+
+	draw_line(W_PLANE_CTX, interpolate_circle(r).map(CURRENT_TRANSFORM));
+}
+
+function draw_circles() {
+	for (let r = 0; r < PLANE_SIZE; r += PLANE_SIZE/N_LINES) {
+		let p = r / PLANE_SIZE;
+		set_stroke(`hsl(${360 * p} 100% 50%)`);
+		draw_circle_transform(r);
+	}
 }

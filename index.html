@@ -10,11 +10,18 @@
   }
   #input_div {
       text-align: center;
-      padding: 1px;
+      padding: 5px;
+  }
+  p {
+      margin: 5px;
   }
 </style>
 <div id="input_div" class="parse-succeeded">
   <p>f(z) = <input type="text" value="z" id="f_input"></p>
+  <p>
+    <input type="radio" name="graph-type" value="grid" id="grid-radio" onchange="grid_radio_change()" checked><label for="grid-radio">Grid</label>
+    <input type="radio" name="graph-type" value="circles" id="circles-radio" onchange="grid_radio_change()"><label for="circles-radio">Circles</label>
+  </p>
 </div>
 <canvas id="z_plane"></canvas>
 <canvas id="w_plane"></canvas>
