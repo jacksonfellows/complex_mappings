@@ -246,6 +246,11 @@ function parse_expr(str) {
 					return z => cos(expr(z));
 				},
 			};
+		} else if (str[i] == "i") {
+			i++;
+			return {
+				nud: () => (z => Z(0, 1)),
+			};
 		}
 		throw "failed to consume token";
 	}
