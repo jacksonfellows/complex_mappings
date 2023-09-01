@@ -14,6 +14,10 @@ const div = (z1, z2) => {
 	return Z(Re(num) / den, Im(num) / den);
 };
 
+const sin = z => Z(Math.sin(Re(z))*Math.cosh(Im(z)), Math.cos(Re(z))*Math.sinh(Im(z)));
+const cos = z => Z(Math.cos(Re(z))*Math.cosh(Im(z)), Math.sin(Re(z))*Math.sinh(Im(z)));
+
+
 var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
 var CURRENT_TRANSFORM = z => z;
@@ -213,6 +217,22 @@ function parse_expr(str) {
 			}
 			return {
 				nud: () => (z => Z(n, 0)),
+			};
+		} else if (str[i] == "s" && str[i + 1] == "i" && str[i + 2] == "n") {
+			i += 3;
+			return {
+				nud: () => {
+					let expr = parse_expr_1(25);
+					return z => sin(expr(z));
+				},
+			};
+		} else if (str[i] == "c" && str[i + 1] == "o" && str[i + 2] == "s") {
+			i += 3;
+			return {
+				nud: () => {
+					let expr = parse_expr_1(25);
+					return z => cos(expr(z));
+				},
 			};
 		}
 		throw "failed to consume token";
