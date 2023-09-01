@@ -28,7 +28,7 @@ var CURRENT_TRANSFORM = z => z;
 
 var CANVAS_SIZE;
 function init_canvas() {
-	CANVAS_SIZE = window.innerWidth / 2 - 20;
+	CANVAS_SIZE = window.innerWidth / 2 - 10;
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
 		ctx.canvas.width = CANVAS_SIZE;
 		ctx.canvas.height = CANVAS_SIZE;
