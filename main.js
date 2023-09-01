@@ -39,7 +39,8 @@ function init_canvas() {
 	});
 }
 
-var GRAPH_TYPE = "grid";
+// Settings.
+var GRAPH_TYPE, STEPS, MAX_EXTEND_ITERS, N_LINES;
 
 window.onresize = () => {
 	init_canvas();
@@ -53,6 +54,7 @@ window.onload = () => {
 	PLANE_SIZE = 1.5;
 
 	init_canvas();
+	settings_change();
 	update_graph();
 
 	var F_INPUT = document.getElementById("f_input");
@@ -93,13 +95,10 @@ function interpolate_line(z1, z2, steps) {
 	return line;
 }
 
-var STEPS = 500;
-
 function in_plane(z) {
 	return -PLANE_SIZE <= z[0] && z[0] <= PLANE_SIZE && -PLANE_SIZE <= z[1] && z[1] <= PLANE_SIZE;
 }
 
-var MAX_EXTEND_ITERS = 4;
 
 function extend_end(z, v) {
 	let [x, y] = z;
@@ -128,8 +127,6 @@ function draw_line_transform(z1, z2) {
 function set_stroke(c) {
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => ctx.strokeStyle = c);
 }
-
-var N_LINES = 10;
 
 function draw_grid() {
 	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/N_LINES) {
@@ -315,8 +312,11 @@ function parse_expr(str) {
 	return expr;
 }
 
-function grid_radio_change() {
-	GRAPH_TYPE = document.querySelector('input[name="graph-type"]:checked').value;
+function settings_change() {
+	GRAPH_TYPE = document.querySelector("input[name='graph-type']:checked").value;
+	STEPS = Math.pow(10, document.getElementById("resolution").value);
+	MAX_EXTEND_ITERS = parseInt(document.getElementById("iterations").value);
+	N_LINES = parseInt(document.getElementById("nlines").value);
 	clear_planes();
 	update_graph();
 }
