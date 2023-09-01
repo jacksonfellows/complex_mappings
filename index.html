@@ -2,8 +2,18 @@
   canvas {
       border: 1px solid black;
   }
+  .parse-failed {
+      background-color: red;
+  }
+  .parse-succeeded {
+      background-color: lightgreen;
+  }
+  #input_div {
+      text-align: center;
+      padding: 1px;
+  }
 </style>
-<div style="text-align: center;">
+<div id="input_div" class="parse-succeeded">
   <p>f(z) = <input type="text" value="z" id="f_input"></p>
 </div>
 <canvas id="z_plane"></canvas>

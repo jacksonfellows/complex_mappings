@@ -51,14 +51,17 @@ window.onload = () => {
 	update_graph();
 
 	var F_INPUT = document.getElementById("f_input");
+	var input_div = document.getElementById("input_div");
 	F_INPUT.oninput = () => {
 		try {
 			CURRENT_TRANSFORM = parse_expr(F_INPUT.value);
 			console.log("parsed expression!");
 			clear_planes();
 			update_graph();
+			input_div.className = "parse-succeeded";
 		} catch (e) {
 			console.log(`caught '${e}' in parsing`);
+			input_div.className = "parse-failed";
 		}
 	};
 };
