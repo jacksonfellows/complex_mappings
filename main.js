@@ -95,9 +95,34 @@ function interpolate_line(z1, z2, steps) {
 
 var STEPS = 500;
 
+function in_plane(z) {
+	return -PLANE_SIZE <= z[0] && z[0] <= PLANE_SIZE && -PLANE_SIZE <= z[1] && z[1] <= PLANE_SIZE;
+}
+
+var MAX_EXTEND_ITERS = 4;
+
+function extend_end(z, v) {
+	let [x, y] = z;
+	for (let i = 0; i < MAX_EXTEND_ITERS; i++) {
+		if (!in_plane(CURRENT_TRANSFORM([x, y]))) {
+			break;
+		}
+		x += v[0];
+		y += v[1];
+		v[0] *= 2;
+		v[1] *= 2;
+	}
+	return [x, y];
+}
+
+function expand_bounds(z1, z2) {
+	return [extend_end(z1, sub(z1, z2)), extend_end(z2, sub(z2, z1))];
+}
+
 function draw_line_transform(z1, z2) {
 	draw_line(Z_PLANE_CTX, [z1, z2]);
-	draw_line(W_PLANE_CTX, interpolate_line(z1, z2, STEPS).map(CURRENT_TRANSFORM));
+	let [z1_, z2_] = expand_bounds(z1, z2);
+	draw_line(W_PLANE_CTX, interpolate_line(z1_, z2_, STEPS).map(CURRENT_TRANSFORM));
 }
 
 function set_stroke(c) {
