@@ -214,6 +214,16 @@ function parse_expr(str) {
 				n = n * 10 + parseInt(str[i]);
 				i++;
 			}
+			if (str[i] == ".") {
+				i++;
+				let n_decimals = 0;
+				while (isdigit(str[i])) {
+					n = n * 10 + parseInt(str[i]);
+					n_decimals++;
+					i++;
+				}
+				n /= 10 ** n_decimals;
+			}
 			return {
 				nud: () => (z => Z(n, 0)),
 			};
