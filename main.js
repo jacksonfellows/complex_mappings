@@ -28,27 +28,27 @@ function init_canvas() {
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
 		ctx.canvas.width = CANVAS_SIZE;
 		ctx.canvas.height = CANVAS_SIZE;
-		ctx.scale(CANVAS_SIZE/PLANE_SIZE, -CANVAS_SIZE/PLANE_SIZE);
-		ctx.translate(PLANE_SIZE/2, -PLANE_SIZE/2);
-		ctx.lineWidth = 2*PLANE_SIZE/CANVAS_SIZE;
+		ctx.scale(CANVAS_SIZE/(2*PLANE_SIZE), -CANVAS_SIZE/(2*PLANE_SIZE));
+		ctx.translate(PLANE_SIZE, -PLANE_SIZE);
+		ctx.lineWidth = 2*(2*PLANE_SIZE)/CANVAS_SIZE;
 	});
 }
 
+var GRAPH_TYPE = "grid";
+
 window.onresize = () => {
 	init_canvas();
-	draw_grid();
-	draw_axes();
+	update_graph();
 }
 
 window.onload = () => {
 	Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
 	W_PLANE_CTX = document.getElementById("w_plane").getContext("2d");
 
-	PLANE_SIZE = 3;
+	PLANE_SIZE = 1.5;
 
 	init_canvas();
-	draw_grid();
-	draw_axes();
+	update_graph();
 
 	var F_INPUT = document.getElementById("f_input");
 	F_INPUT.oninput = () => {
@@ -56,8 +56,7 @@ window.onload = () => {
 			CURRENT_TRANSFORM = parse_expr(F_INPUT.value);
 			console.log("parsed expression!");
 			clear_planes();
-			draw_grid();
-			draw_axes();
+			update_graph();
 		} catch (e) {
 			console.log(`caught '${e}' in parsing`);
 		}
@@ -98,14 +97,14 @@ function set_stroke(c) {
 }
 
 function draw_grid() {
-	let n_lines = 32;
-	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_lines) {
+	let n_square_per_quadrant = 10;
+	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_square_per_quadrant) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// vertical line
 		set_stroke(`hsl(${300 + 180*p} 100% 50%)`);
 		draw_line_transform([x, -PLANE_SIZE], [x, +PLANE_SIZE]);
 	}
-	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_lines) {
+	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/n_square_per_quadrant) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// horizontal line
 		set_stroke(`hsl(${120 + 180*p} 100% 50%)`);
@@ -257,4 +256,13 @@ function parse_expr(str) {
 		throw "could not parse all of input";
 	}
 	return expr;
+}
+
+function update_graph() {
+	switch (GRAPH_TYPE) {
+	case "grid":
+		draw_grid();
+		break;
+	}
+	draw_axes();
 }
