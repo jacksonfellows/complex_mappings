@@ -292,6 +292,8 @@ function update_graph() {
 	case "circles":
 		draw_circles();
 		break;
+	case "radial":
+		draw_radial_lines();
 	}
 	draw_axes();
 }
@@ -299,7 +301,7 @@ function update_graph() {
 function interpolate_circle(r) {
 	let points = [];
 	for (let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/STEPS) {
-		points.push([r*Math.sin(theta), r*Math.cos(theta)]);
+		points.push([r*Math.cos(theta), r*Math.sin(theta)]);
 	}
 	return points;
 }
@@ -314,8 +316,23 @@ function draw_circle_transform(r) {
 
 function draw_circles() {
 	for (let r = 0; r < PLANE_SIZE; r += PLANE_SIZE/N_LINES) {
-		let p = r / PLANE_SIZE;
+		let p = r/PLANE_SIZE;
 		set_stroke(`hsl(${360 * p} 100% 50%)`);
 		draw_circle_transform(r);
+	}
+}
+
+function draw_radial_line_transform(theta) {
+	let r = Math.sqrt(2)*PLANE_SIZE;
+	let z1 = [r*Math.cos(theta), r*Math.sin(theta)];
+	let z2 = [-r*Math.cos(theta), -r*Math.sin(theta)];
+	draw_line_transform(z1, z2);
+}
+
+function draw_radial_lines() {
+	for (let theta = 0; theta < Math.PI; theta += Math.PI/(2*N_LINES)) {
+		let p = theta/Math.PI;
+		set_stroke(`hsl(${360 * p} 100% 50%)`);
+		draw_radial_line_transform(theta);
 	}
 }
