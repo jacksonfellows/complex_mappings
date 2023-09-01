@@ -17,6 +17,10 @@ const div = (z1, z2) => {
 const sin = z => Z(Math.sin(Re(z))*Math.cosh(Im(z)), Math.cos(Re(z))*Math.sinh(Im(z)));
 const cos = z => Z(Math.cos(Re(z))*Math.cosh(Im(z)), Math.sin(Re(z))*Math.sinh(Im(z)));
 
+const exp = z => {
+	let ex = Math.exp(Re(z));
+	return Z(ex*Math.cos(Im(z)), ex*Math.sin(Im(z)));
+};
 
 var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
@@ -251,6 +255,14 @@ function parse_expr(str) {
 			i++;
 			return {
 				nud: () => (z => Z(0, 1)),
+			};
+		} else if (str[i] == "e" && str[i + 1] == "x" && str[i + 2] == "p") {
+			i += 3;
+			return {
+				nud: () => {
+					let expr = parse_expr_1(25);
+					return z => exp(expr(z));
+				},
 			};
 		}
 		throw "failed to consume token";
