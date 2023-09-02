@@ -132,13 +132,13 @@ function draw_grid() {
 	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/N_LINES) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// vertical line
-		set_stroke(`hsl(${300 + 180*p} 100% 50%)`);
+		set_stroke(`hsl(${300 + 120*p} 100% 50%)`);
 		draw_line_transform([x, -PLANE_SIZE], [x, +PLANE_SIZE]);
 	}
 	for (let x = -PLANE_SIZE; x < +PLANE_SIZE; x += PLANE_SIZE/N_LINES) {
 		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
 		// horizontal line
-		set_stroke(`hsl(${120 + 180*p} 100% 50%)`);
+		set_stroke(`hsl(${120 + 120*p} 100% 50%)`);
 		draw_line_transform([-PLANE_SIZE, x], [+PLANE_SIZE, x]);
 	}
 }
