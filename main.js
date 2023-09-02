@@ -149,15 +149,15 @@ function clear_planes() {
 
 function draw_axes() {
 	set_stroke("black");
-	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
+	[[Z_PLANE_CTX, ["x", "y"]], [W_PLANE_CTX, ["u", "v"]]].forEach(([ctx, axis_labels]) => {
 		draw_line(ctx, [[-PLANE_SIZE, 0], [+PLANE_SIZE, 0]]);
 		draw_line(ctx, [[0, -PLANE_SIZE], [0, +PLANE_SIZE]]);
 		// Have to undo transform to write text.
 		ctx.save();
 		ctx.resetTransform();
 		ctx.font = "24px serif";
-		ctx.fillText("x", CANVAS_SIZE - 20, CANVAS_SIZE/2 + 20);
-		ctx.fillText("y", CANVAS_SIZE/2 + 20, 20);
+		ctx.fillText(axis_labels[0], CANVAS_SIZE - 20, CANVAS_SIZE/2 + 20);
+		ctx.fillText(axis_labels[1], CANVAS_SIZE/2 + 20, 20);
 		ctx.restore();
 	});
 }
