@@ -183,6 +183,16 @@ function parse_expr(str) {
 			return {
 				nud: () => (z => z),
 			};
+		} else if (str[i] == "x") {
+			i++;
+			return {
+				nud: () => (z => Z(Re(z), 0)),
+			};
+		} else if (str[i] == "y") {
+			i++;
+			return {
+				nud: () => (z => Z(Im(z), 0)),
+			};
 		} else if (str[i] == "+") {
 			i++;
 			return {
