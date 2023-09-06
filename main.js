@@ -27,7 +27,6 @@ var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
 
 var CURRENT_TRANSFORM = z => z;
 
-var CANVAS_SIZE;
 function init_canvas() {
 	CANVAS_SIZE = window.innerWidth / 2 - 10;
 	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
@@ -45,7 +44,7 @@ var GRAPH_TYPE, STEPS, MAX_EXTEND_ITERS, N_LINES;
 window.onresize = () => {
 	init_canvas();
 	update_graph();
-}
+};
 
 window.onload = () => {
 	Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
@@ -174,7 +173,7 @@ function parse_expr(str) {
 		}
 
 		if (i >= str.length) {
-			i++
+			i++;
 			return {			// end token
 				lpb: 0,
 			};
