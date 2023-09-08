@@ -23,38 +23,77 @@ const exp = z => {
 	return Z(ex*Math.cos(Im(z)), ex*Math.sin(Im(z)));
 };
 
-var Z_PLANE_CTX, W_PLANE_CTX, PLANE_SIZE, CANVAS_SIZE;
+var Z_PLANE_CTX, W_PLANE_CTX, CANVAS_SIZE;
+
+let for_ctx = f => [Z_PLANE_CTX, W_PLANE_CTX].forEach(f);
+
+var MIN = [-1.5, -1.5];
+var MAX = [1.5, 1.5];
+
+var PAN = [0, 0];
 
 var CURRENT_TRANSFORM = z => z;
 
-function init_canvas() {
-	CANVAS_SIZE = window.innerWidth / 2 - 10;
-	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => {
-		ctx.canvas.width = CANVAS_SIZE;
-		ctx.canvas.height = CANVAS_SIZE;
-		ctx.scale(CANVAS_SIZE/(2*PLANE_SIZE), -CANVAS_SIZE/(2*PLANE_SIZE));
-		ctx.translate(PLANE_SIZE, -PLANE_SIZE);
-		ctx.lineWidth = 2*(2*PLANE_SIZE)/CANVAS_SIZE;
+function update_transforms() {
+	MIN[0] += PAN[0];
+	MIN[1] += PAN[1];
+	MAX[0] += PAN[0];
+	MAX[1] += PAN[1];
+	PAN[0] = 0;
+	PAN[1] = 0;
+	let d = sub(MAX, MIN);
+	for_ctx(ctx => {
+		ctx.resetTransform();
+		ctx.scale(CANVAS_SIZE/d[0], -CANVAS_SIZE/d[1]);
+		ctx.translate(-MIN[0], -MAX[1]);
 	});
 }
 
 // Settings.
-var GRAPH_TYPE, STEPS, MAX_EXTEND_ITERS, N_LINES;
+var GRAPH_TYPE, STEPS, MAX_EXTEND_ITERS, GRID_SPACING;
 
-window.onresize = () => {
-	init_canvas();
-	update_graph();
-};
+function pixel_to_plane(p) {
+	let [x, y] = p;
+	let dom_point = Z_PLANE_CTX.getTransform().inverse().transformPoint(new DOMPoint(x, y));
+	return [dom_point.x, dom_point.y];
+}
+
+var DRAG_START;
+
+function handle_pan_event(e) {
+	let p = pixel_to_plane([e.clientX, e.clientY]);
+	PAN[0] = DRAG_START[0] - p[0];
+	PAN[1] = DRAG_START[1] - p[1];
+}
+
+window.onresize = size_change;
+
+function size_change() {
+	// Handle change in window size.
+	CANVAS_SIZE = window.innerWidth / 2 - 10;
+	for_ctx(ctx => {
+		ctx.canvas.width = CANVAS_SIZE;
+		ctx.canvas.height = CANVAS_SIZE;
+	});
+}
 
 window.onload = () => {
 	Z_PLANE_CTX = document.getElementById("z_plane").getContext("2d");
 	W_PLANE_CTX = document.getElementById("w_plane").getContext("2d");
 
-	PLANE_SIZE = 1.5;
-
-	init_canvas();
+	size_change();
 	settings_change();
-	update_graph();
+
+	redraw();
+
+	Z_PLANE_CTX.canvas.onmousedown = e => {
+		DRAG_START = pixel_to_plane([e.clientX, e.clientY]);
+		PREV_MIN = MIN;
+		PREV_MAX = MAX;
+		Z_PLANE_CTX.canvas.onmousemove = handle_pan_event;
+	};
+	Z_PLANE_CTX.canvas.onmouseup = _ => {Z_PLANE_CTX.canvas.onmousemove = undefined;};
+	Z_PLANE_CTX.canvas.onmouseleave = _ => {Z_PLANE_CTX.canvas.onmousemove = undefined;};
 
 	var F_INPUT = document.getElementById("f_input");
 	var input_div = document.getElementById("input_div");
@@ -62,8 +101,6 @@ window.onload = () => {
 		try {
 			CURRENT_TRANSFORM = parse_expr(F_INPUT.value);
 			console.log("parsed expression!");
-			clear_planes();
-			update_graph();
 			input_div.className = "parse-succeeded";
 		} catch (e) {
 			console.log(`caught '${e}' in parsing`);
@@ -75,7 +112,11 @@ window.onload = () => {
 function draw_line(ctx, points) {
 	ctx.beginPath();
 	points.forEach(p => ctx.lineTo(p[0], p[1]));
+	ctx.save();
+	ctx.resetTransform();
+	ctx.lineWidth = 2;
 	ctx.stroke();
+	ctx.restore();
 }
 
 function interpolate_line(z1, z2, steps) {
@@ -95,9 +136,9 @@ function interpolate_line(z1, z2, steps) {
 }
 
 function in_plane(z) {
-	return -PLANE_SIZE <= z[0] && z[0] <= PLANE_SIZE && -PLANE_SIZE <= z[1] && z[1] <= PLANE_SIZE;
+	let A = Math.max(Math.abs(MIN[0]), Math.abs(MAX[0]), Math.abs(MIN[1]), Math.abs(MAX[1]));
+	return -A <= z[0] && z[0] <= A && -A <= z[1] && z[1] <= A;
 }
-
 
 function extend_end(z, v) {
 	let [x, y] = z;
@@ -124,40 +165,39 @@ function draw_line_transform(z1, z2) {
 }
 
 function set_stroke(c) {
-	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => ctx.strokeStyle = c);
+	for_ctx(ctx => ctx.strokeStyle = c);
 }
 
 function draw_grid() {
-	for (let i = 0, x = -PLANE_SIZE; i++ <= 2*N_LINES; x += PLANE_SIZE/N_LINES) {
-		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
-		// vertical line
-		set_stroke(`hsl(${300 + 120*p} 100% 50%)`);
-		draw_line_transform([x, -PLANE_SIZE], [x, +PLANE_SIZE]);
+	let A = Math.max(Math.abs(MIN[0]), Math.abs(MAX[0]), Math.abs(MIN[1]), Math.abs(MAX[1]));
+	for (let x = 0; x <= A; x += GRID_SPACING) {
+		let p = x/A;
+		set_stroke(`hsl(${60*p} 100% 50%)`);
+		draw_line_transform([x, MIN[1]], [x, MAX[1]]);
+		set_stroke(`hsl(${-60*p} 100% 50%)`);
+		draw_line_transform([-x, MIN[1]], [-x, MAX[1]]);
 	}
-	for (let i = 0, x = -PLANE_SIZE; i++ <= 2*N_LINES; x += PLANE_SIZE/N_LINES) {
-		let p = (x + PLANE_SIZE)/(2*PLANE_SIZE);
-		// horizontal line
-		set_stroke(`hsl(${120 + 120*p} 100% 50%)`);
-		draw_line_transform([-PLANE_SIZE, x], [+PLANE_SIZE, x]);
+	for (let y = 0; y <= A; y += GRID_SPACING) {
+		let p = y/A;
+		set_stroke(`hsl(${180 + 60*p} 100% 50%)`);
+		draw_line_transform([MIN[0], y], [MAX[0], y]);
+		set_stroke(`hsl(${180 - 60*p} 100% 50%)`);
+		draw_line_transform([MIN[0], -y], [MAX[0], -y]);
 	}
-}
-
-function clear_planes() {
-	[Z_PLANE_CTX, W_PLANE_CTX].forEach(ctx => ctx.clearRect(-PLANE_SIZE, -PLANE_SIZE, 2*PLANE_SIZE, 2*PLANE_SIZE));
 }
 
 function draw_axes() {
 	set_stroke("black");
 	[[Z_PLANE_CTX, ["x", "y"]], [W_PLANE_CTX, ["u", "v"]]].forEach(([ctx, axis_labels]) => {
-		draw_line(ctx, [[-PLANE_SIZE, 0], [+PLANE_SIZE, 0]]);
-		draw_line(ctx, [[0, -PLANE_SIZE], [0, +PLANE_SIZE]]);
+		draw_line(ctx, [[MIN[0], 0], [MAX[0], 0]]);
+		draw_line(ctx, [[0, MIN[1]], [0, MAX[1]]]);
 		// Have to undo transform to write text.
-		ctx.save();
-		ctx.resetTransform();
-		ctx.font = "24px serif";
-		ctx.fillText(axis_labels[0], CANVAS_SIZE - 20, CANVAS_SIZE/2 + 20);
-		ctx.fillText(axis_labels[1], CANVAS_SIZE/2 + 20, 20);
-		ctx.restore();
+		// ctx.save();
+		// ctx.resetTransform();
+		// ctx.font = "24px serif";
+		// ctx.fillText(axis_labels[0], CANVAS_SIZE - 20, CANVAS_SIZE/2 + 20);
+		// ctx.fillText(axis_labels[1], CANVAS_SIZE/2 + 20, 20);
+		// ctx.restore();
 	});
 }
 
@@ -322,26 +362,36 @@ function parse_expr(str) {
 }
 
 function settings_change() {
+	// Reload settings.
 	GRAPH_TYPE = document.querySelector("input[name='graph-type']:checked").value;
 	STEPS = Math.pow(10, document.getElementById("resolution").value);
 	MAX_EXTEND_ITERS = parseInt(document.getElementById("iterations").value);
-	N_LINES = parseInt(document.getElementById("nlines").value);
-	clear_planes();
-	update_graph();
+	GRID_SPACING = parseFloat(document.getElementById("grid-spacing").value);
 }
 
-function update_graph() {
-	switch (GRAPH_TYPE) {
-	case "grid":
-		draw_grid();
-		break;
-	case "circles":
-		draw_circles();
-		break;
-	case "radial":
-		draw_radial_lines();
+function redraw() {
+	if (Z_PLANE_CTX && W_PLANE_CTX) {
+		// Update transforms.
+		update_transforms();
+
+		// Clear canvas.
+		for_ctx(ctx => ctx.clearRect(MIN[0], MIN[1], MAX[0] - MIN[0], MAX[1] - MIN[1]));
+
+		// Draw content.
+		switch (GRAPH_TYPE) {
+		case "grid":
+			draw_grid();
+			break;
+		// case "circles":
+		//	draw_circles();
+		//	break;
+		// case "radial":
+		//	draw_radial_lines();
+		}
+		draw_axes();
 	}
-	draw_axes();
+
+	requestAnimationFrame(redraw);
 }
 
 function interpolate_circle(r) {
